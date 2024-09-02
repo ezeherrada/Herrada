@@ -1,137 +1,91 @@
 #include <iostream>
-#include <string>
 #include <filesystem>
-#include <vector>
-#include <algorithm>
+#include <cstdlib>
 
-using namespace std;
-using namespace std::filesystem;
+namespace fs = std::filesystem;
+
+void listFiles() {
+    std::string path = fs::current_path().string();
+    std::cout << "Listing files in: " << path << "\n";
+    for (const auto& entry : fs::directory_iterator(path)) {
+        std::cout << entry.path().filename().string() << "\n";
+    }
+}
+
+void createDirectory() {
+    std::string dirName;
+    std::cout << "Enter the name of the directory to create: ";
+    std::cin >> dirName;
+
+    try {
+        if (fs::create_directory(dirName)) {
+            std::cout << "Directory created successfully.\n";
+        } else {
+            std::cout << "Failed to create directory. It may already exist.\n";
+        }
+    } catch (fs::filesystem_error& e) {
+        std::cout << "Error: " << e.what() << "\n";
+    }
+}
+
+void changeDirectory() {
+    std::string path;
+    std::cout << "Enter the path of the directory to change to: ";
+    std::cin >> path;
+
+    try {
+        fs::current_path(path);
+        std::cout << "Directory changed to: " << fs::current_path().string() << "\n";
+    } catch (fs::filesystem_error& e) {
+        std::cout << "Error: " << e.what() << "\n";
+    }
+}
+
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
 
 int main() {
-  string currentDirectory = "C:\\Users\\UserName\\Documents";
-  cout << "MAIN MENU" << endl;
-  cout << "1. To Display List of Files" << endl;
-  cout << "2. To Create New Directory" << endl;
-  cout << "3. To Change the Working Directory" << endl;
-  cout << "4. Exit" << endl;
-  cout << "Enter the Number: ";
-  int choice;
-  cin >> choice;
+    int choice;
 
-  while (choice != 4) {
-    if (choice == 1) {
-      cout << "LIST FILE DETAIL" << endl;
-      cout << "1. List All Files" << endl;
-      cout << "2. List of Extension Files" << endl;
-      cout << "3. List of Name Wise" << endl;
-      cout << "Enter the Number: ";
-      cin >> choice;
-      if (choice == 1) {
-        // List All Files
-        vector<string> files;
-        for (const auto &entry : directory_iterator(currentDirectory)) {
-          if (is_regular_file(entry)) {
-            files.push_back(entry.path().filename().string());
-          }
+    do {
+        clearScreen();
+        std::cout << "Directory Management System\n";
+        std::cout << "1. List files in current directory\n";
+        std::cout << "2. Create a new directory\n";
+        std::cout << "3. Change current directory\n";
+        std::cout << "4. Exit\n";
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+        case 1:
+            listFiles();
+            break;
+        case 2:
+            createDirectory();
+            break;
+        case 3:
+            changeDirectory();
+            break;
+        case 4:
+            std::cout << "Exiting...\n";
+            break;
+        default:
+            std::cout << "Invalid choice. Please try again.\n";
         }
-        cout << "List of All(*) Files" << endl;
-        for (const auto &file : files) {
-          cout << file << endl;
+
+        if (choice != 4) {
+            std::cout << "Press Enter to continue...";
+            std::cin.ignore();
+            std::cin.get();
         }
-        cout << "(continues...)" << endl;
-        cout << "Total Files: " << files.size() << endl;
-      } else if (choice == 2) {
-        // List of Extension Files
-        vector<string> files;
-        for (const auto &entry : directory_iterator(currentDirectory)) {
-          if (is_regular_file(entry)) {
-            files.push_back(entry.path().filename().string());
-          }
-        }
-        sort(files.begin(), files.end(), [](const string &a, const string &b) {
-          return a.substr(a.find_last_of('.') + 1) < b.substr(b.find_last_of('.') + 1);
-        });
-        cout << "List of Extension Files" << endl;
-        for (const auto &file : files) {
-          cout << file << endl;
-        }
-        cout << "(continues...)" << endl;
-        cout << "Total Files: " << files.size() << endl;
-      } else if (choice == 3) {
-        // List of Name Wise
-        vector<string> files;
-        for (const auto &entry : directory_iterator(currentDirectory)) {
-          if (is_regular_file(entry)) {
-            files.push_back(entry.path().filename().string());
-          }
-        }
-        sort(files.begin(), files.end());
-        cout << "List of Name Wise" << endl;
-        for (const auto &file : files) {
-          cout << file << endl;
-        }
-        cout << "(continues...)" << endl;
-        cout << "Total Files: " << files.size() << endl;
-      } else {
-        cout << "Invalid Choice" << endl;
-      }
-    } else if (choice == 2) {
-      // To Create New Directory
-      cout << "Enter the Directory Name: ";
-      string directoryName;
-      cin >> directoryName;
-      if (create_directory(currentDirectory + "\\" + directoryName)) {
-        cout << "Directory created successfully." << endl;
-      } else {
-        cout << "Failed to create directory." << endl;
-      }
-    } else if (choice == 3) {
-      // To Change the Working Directory
-      cout << "Current Directory: " << currentDirectory << endl;
-      cout << "Change Directory" << endl;
-      cout << "1. Step by Step Backward" << endl;
-      cout << "2. Goto Root Directory" << endl;
-      cout << "3. Forward Directory" << endl;
-      cout << "Enter the Number: ";
-      cin >> choice;
-      if (choice == 1) {
-        // Step by Step Backward
-        path p(currentDirectory);
-        if (p.has_parent_path()) {
-          currentDirectory = p.parent_path().string();
-          cout << "Current Directory: " << currentDirectory << endl;
-        } else {
-          cout << "Already at the root directory." << endl;
-        }
-      } else if (choice == 2) {
-        // Goto Root Directory
-        currentDirectory = "C:\\";
-        cout << "Current Directory: " << currentDirectory << endl;
-      } else if (choice == 3) {
-        // Forward Directory
-        cout << "Please enter the Directory Name: ";
-        string directoryName;
-        cin >> directoryName;
-        currentDirectory += "\\" + directoryName;
-        if (exists(currentDirectory)) {
-          cout << "Current Directory: " << currentDirectory << endl;
-        } else {
-          cout << "Directory does not exist." << endl;
-        }
-      } else {
-        cout << "Invalid Choice" << endl;
-      }
-    } else {
-      cout << "Invalid Choice" << endl;
-    }
-    cout << "MAIN MENU" << endl;
-    cout << "1. To Display List of Files" << endl;
-    cout << "2. To Create New Directory" << endl;
-    cout << "3. To Change the Working Directory" << endl;
-    cout << "4. Exit" << endl;
-    cout << "Enter the Number: ";
-    cin >> choice;
-  }
-  cout << "Exiting..." << endl;
-  return 0;
+
+    } while (choice != 4);
+
+    return 0;
 }
